@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gist Blog / example</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.2/marked.min.js"></script>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --bg: #ffffff;
+            --text: #1f2937;
+            --gray: #6b7280;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            line-height: 1.6;
+            color: var(--text);
+            background: var(--bg);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        nav {
+            padding: 1rem;
+            background: var(--bg);
+            border-bottom: 1px solid #e5e7eb;
+            position: sticky;
+            top: 0;
+        }
+
+        .container {
+            max-width: 768px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+        }
+
+        .blog-list {
+            display: grid;
+            gap: 1.5rem;
+        }
+
+        .blog-card {
+            padding: 1.5rem;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.5rem;
+            transition: transform 0.2s;
+        }
+
+        .blog-card:hover {
+            transform: translateY(-2px);
+        }
+
+        .blog-title {
+            font-size: 1.5rem;
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .blog-title a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        .blog-title a:hover {
+            text-decoration: underline;
+        }
+
+        .blog-excerpt {
+            color: var(--gray);
+            margin-top: 0.5rem;
+        }
+
+        .blog-date {
+            color: var(--gray);
+            font-size: 0.875rem;
+        }
+
+        .blog-content {
+            margin-top: 2rem;
+        }
+
+        .blog-content h1 { font-size: 2rem; margin: 1.5rem 0 1rem; }
+        .blog-content h2 { font-size: 1.5rem; margin: 1.25rem 0 0.75rem; }
+        .blog-content p { margin-bottom: 1rem; }
+        .blog-content code {
+            background: #f3f4f6;
+            padding: 0.2rem 0.4rem;
+            border-radius: 0.25rem;
+        }
+        .blog-content pre {
+            background: #f3f4f6;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            overflow-x: auto;
+            margin: 1rem 0;
+        }
+
+        nav h1 a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        .error {
+            color: red;
+            text-align: center;
+            margin-top: 2rem;
+        }
+
+        footer {
+            margin-top: auto;
+            padding: 1rem;
+            text-align: center;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        footer a {
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        footer a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <div class="container">
+            <h1><a href="/">Blog Gist</a></h1>
+        </div>
+    </nav>
+    
+    <main class="container" id="main">
+        Loading...
+    </main>
+
+    <footer>
+        <a href="https://github.com/idaeyus/GistBlog">Made with GistBlog</a>
+    </footer>
+
+    <script>
+        const MASTER_JSON_URL = 'https://gist.githubusercontent.com/ef9t/36d2bab57608c69514137f66fd8dc8b8/raw/825491faa423fa25fca7d856adeb1cb3d0844db6/blogs.json';
+
+        function fetchWithFallback(url) {
+            return new Promise((resolve, reject) => {
+                fetch(url)
+                    .then(response => {
+                        if (response.ok) return response.json();
+                        throw new Error('Network response was not ok');
+                    })
+                    .then(resolve)
+                    .catch(() => {
+                        const xhr = new XMLHttpRequest();
+                        xhr.open('GET', url, true);
+                        xhr.onload = function() {
+                            if (xhr.status >= 200 && xhr.status < 300) {
+                                try {
+                                    resolve(JSON.parse(xhr.responseText));
+                                } catch (e) {
+                                    reject(e);
+                                }
+                            } else {
+                                reject(new Error(`Request failed with status ${xhr.status}`));
+                            }
+                        };
+                        xhr.onerror = () => reject(new Error('Network error'));
+                        xhr.send();
+                    });
+            });
+        }
+
+        async function fetchMarkdown(url) {
+            const response = await fetch(url);
+            return response.text();
+        }
+
+        function renderBlogList(blogs) {
+            return `
+                <div class="blog-list">
+                    ${blogs.map(blog => `
+                        <article class="blog-card">
+                            <h2 class="blog-title">
+                                <a href="#/blog/${blog.slug}">${blog.title}</a>
+                            </h2>
+                            <div class="blog-date">${new Date(blog.date).toLocaleDateString()}</div>
+                            ${blog.excerpt ? `<div class="blog-excerpt">${blog.excerpt}</div>` : ''}
+                        </article>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        function renderBlogPost(content, title, date) {
+            return `
+                <article>
+                    <h1 class="blog-title">${title}</h1>
+                    <div class="blog-date">${new Date(date).toLocaleDateString()}</div>
+                    <div class="blog-content">${marked.parse(content)}</div>
+                </article>
+            `;
+        }
+
+        function renderError(message) {
+            return `<div class="error"><h1>${message}</h1></div>`;
+        }
+
+        async function router() {
+            const main = document.getElementById('main');
+            const hash = window.location.hash || '#/';
+
+            try {
+                const masterData = await fetchWithFallback(MASTER_JSON_URL);
+
+                if (hash === '#/' || hash === '') {
+                    main.innerHTML = renderBlogList(masterData.blogs);
+                } else {
+                    const slug = hash.replace('#/blog/', '');
+                    const blog = masterData.blogs.find(b => b.slug === slug);
+                    
+                    if (blog) {
+                        const content = await fetchMarkdown(blog.gistUrl);
+                        main.innerHTML = renderBlogPost(content, blog.title, blog.date);
+                    } else {
+                        main.innerHTML = renderError('Blog not found');
+                    }
+                }
+            } catch (error) {
+                main.innerHTML = renderError('Error loading blog: ' + error.message);
+                console.error(error);
+            }
+        }
+
+        window.addEventListener('hashchange', router);
+        window.addEventListener('load', router);
+    </script>
+</body>
+</html>
