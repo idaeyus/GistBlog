@@ -1,0 +1,27 @@
+{
+  "blogs": [
+    {
+      "title": "An example blog",
+      "date": "2024-01-15",
+      "gistUrl": "https://gist.githubusercontent.com/ef9t/e3aede9b38501037a9edcd0239fa1a10/raw/35497d4c50b76e3ebb7775174c105552f0f84644/blog1.md",
+      "slug": "an-example-blog",
+      "excerpt": "An example blog for GistBlog"
+    },
+    {
+      "title": "Important links",
+      "date": "2024-01-10",
+      "gistUrl": "https://gist.githubusercontent.com/ef9t/9269babe3a773a0102864b7d5bf0152a/raw/5c72abfa5fc58341e9ab068d14f4ed7d227f138f/importantlinks.md",
+      "slug": "important-links,
+      "excerpt": "Important Links you need to learn GistBlog"
+    }
+  ],
+  "author": {
+    "name": "Idaeyus",
+    "avatar": "https://github.com/idaeyus.png",
+    "bio": "An OSS collective"
+  },
+  "site": {
+    "title": "BlogGist",
+    "description": "A simple placeholder blog built with GistBlog"
+  }
+}
