@@ -1,5 +1,5 @@
 # GistBlog
-## A blogging tool using GitHub Gists . GistBlog creates an interface for your markdown blog hosted via Gists .
+## A blogging tool that uses GitHub Gists to run your blogs . GistBlog creates an interface for your markdown blog hosted via Gists .
 
 #  Tutorial 
  1. Go to [your Gists dashboard](tab:https://gist.github.com/).
